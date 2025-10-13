@@ -54,22 +54,23 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
 
         S_a = -1j * delta_a - self.ka / 2
         S_m = -1j * delta_m - self.km / 2
-        S_am=S_m+self.g_ma**2/S_a
+        S_am = S_m + self.g_ma ** 2 / S_a
 
-        Imag=S_am.imag
-        Real=S_am.real
-        C=2*self.K*self.kaed/(hbar*self.omega_d)*np.abs(self.g_ma/S_a)**2+2*self.K*self.kmed/(hbar*self.omega_d)
+        Imag = S_am.imag
+        Real = S_am.real
+        C = 2 * self.K * self.kaed / (hbar * self.omega_d) * np.abs(self.g_ma / S_a) ** 2 + 2 * self.K * self.kmed / (
+                hbar * self.omega_d)
 
-        return Real,Imag,C
+        return Real, Imag, C
 
-    def Get_real_solution_power(self,A,B,C):
-        x0=[]
-        x1=[]
-        x2=[]
-        y0=[]
-        y1=[]
-        y2=[]
-        for i,D in enumerate(self.P_d):
+    def Get_real_solution_power(self, A, B, C):
+        x0 = []
+        x1 = []
+        x2 = []
+        y0 = []
+        y1 = []
+        y2 = []
+        for i, D in enumerate(self.P_d):
             t = Solve_Cubic_Equation(A, B, C, D)
             if sp.Abs(sp.im(t[0])) < 1:
                 omega_m0 = self.omega_m + float(sp.re(t[0]))
@@ -99,9 +100,10 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
                     s0[i] = s2[j]
         backward = s0
         backwardp = p0
-        unstable= s1
+        unstable = s1
         unstablep = p1
-        return np.array(forward), np.array(forwardp), np.array(backward), np.array(backwardp), np.array(unstable), np.array(unstablep)
+        return np.array(forward), np.array(forwardp), np.array(backward), np.array(backwardp), np.array(
+            unstable), np.array(unstablep)
 
     def Parameter_definition_fre(self):
         delta_a = self.omega_a - self.omega_d
@@ -115,7 +117,7 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
             self.g_ma / (S_a)) ** 2 + 2 * self.K / (hbar * self.omega_d) * self.kmed
         return Real, Imag, C
 
-    def Get_real_solution_fre(self, A: np.ndarray, B: np.ndarray, C,D):
+    def Get_real_solution_fre(self, A: np.ndarray, B: np.ndarray, C, D):
         x0 = []
         x1 = []
         x2 = []
@@ -140,9 +142,9 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
                 x2.append(round(f, 9))
         return x0, y0, x1, y1, x2, y2
 
-    def BS_fre(self,D):
+    def BS_fre(self, D):
         Real, Imag, C = self.Parameter_definition_fre()
-        f0, s0, f1, s1, f2, s2 = self.Get_real_solution_fre(-Imag, -Real, C,D)
+        f0, s0, f1, s1, f2, s2 = self.Get_real_solution_fre(-Imag, -Real, C, D)
         backward = s0.copy()
         backwardf = f0.copy()
         for i in range(len(f0)):
@@ -153,16 +155,17 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
         forwardf = f0
         unstable = s1
         unstablef = f1
-        return np.array(forward), np.array(forwardf), np.array(backward), np.array(backwardf), np.array(unstable), np.array(unstablef)
+        return np.array(forward), np.array(forwardf), np.array(backward), np.array(backwardf), np.array(
+            unstable), np.array(unstablef)
 
     def BS_2D(self):
-        F=[]
-        B=[]
-        for i,D in enumerate(self.P_d):
-            forward, forwardf, backward, backwardf, unstable, unstablef=self.BS_fre(self, D)
+        F = []
+        B = []
+        for i, D in enumerate(self.P_d):
+            forward, forwardf, backward, backwardf, unstable, unstablef = self.BS_fre(self, D)
             F.append(forward)
             B.append(backward)
-        return self.P_d, self.omega_d,F,B
+        return self.P_d, self.omega_d, F, B
 
     def wplus_to_wm(self, wplus):
         Wplus = np.array(wplus)
@@ -171,46 +174,13 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
         wm = fenzi / fenmu
         return wm
 
-    def Compute_ms_and_as_power(self):
-        forward, forwardp, backward, backwardp, unstable, unstablep=self.BS_power()
-        delta_a = self.omega_a - self.omega_d
-        delta_m = self.omega_m - self.omega_d
-        wplus_init=self.branch_fre(self.omega_m)
-
-        wplus_finalf=wplus_init+forward*1e6*2*np.pi
-        Delta_mf=self.wplus_to_wm(wplus_finalf)-self.omega_m
-        fenzif = -1j * self.g_ma * np.sqrt(self.kaed) * np.sqrt(forwardp / (hbar * self.omega_d))
-        fenmuf = (1j * delta_a + self.ka / 2) * (1j * (delta_m + Delta_mf) + self.km / 2) + self.g_ma ** 2
-        m_sf = fenzif / fenmuf
-        a_sf = ((-1j * self.g_ma * m_sf + np.sqrt(self.kaed) * np.sqrt(forwardp / (hbar * self.omega_d))) / (
-        (1j * delta_a + self.ka / 2)))
-
-        wplus_finalb = wplus_init + backward*1e6*2*np.pi
-        Delta_mb = self.wplus_to_wm(wplus_finalb) - self.omega_m
-        fenzib = -1j * self.g_ma * np.sqrt(self.kaed) * np.sqrt(backwardp / (hbar * self.omega_d))
-        fenmub = (1j * delta_a + self.ka / 2) * (1j * (delta_m + Delta_mb) + self.km / 2) + self.g_ma ** 2
-        m_sb = fenzib / fenmub
-        a_sb = ((-1j * self.g_ma * m_sb + np.sqrt(self.kaed) * np.sqrt(backwardp / (hbar * self.omega_d))) / (
-            (1j * delta_a + self.ka / 2)))
-
-        wplus_finalu = wplus_init + unstable*1e6*2*np.pi
-        Delta_mu = self.wplus_to_wm(wplus_finalu) - self.omega_m
-        fenziu = -1j * self.g_ma * np.sqrt(self.kaed) * np.sqrt(unstablep / (hbar * self.omega_d))
-        fenmuu = (1j * delta_a + self.ka / 2) * (1j * (delta_m + Delta_mu) + self.km / 2) + self.g_ma ** 2
-        m_su = fenziu / fenmuu
-        a_su = ((-1j * self.g_ma * m_su + np.sqrt(self.kaed) * np.sqrt(unstablep / (hbar * self.omega_d))) / (
-            (1j * delta_a + self.ka / 2)))
-
-        return m_sf, a_sf,m_sb,a_sb,m_su,a_su
-
-
     def Compute_ms_and_as_fre(self):
         forward, forwardf, backward, backwardf, unstable, unstablef = self.BS_fre(self.P_d)
         delta_a = self.omega_a - self.omega_d
         delta_m = self.omega_m - self.omega_d
         wplus_init = self.branch_fre(self.omega_m)
 
-        wplus_finalf = wplus_init + forward*1e6*2*np.pi
+        wplus_finalf = wplus_init + forward * 1e6 * 2 * np.pi
         Delta_mf = self.wplus_to_wm(wplus_finalf) - self.omega_m
         fenzif = -1j * self.g_ma * np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * self.omega_d))
         fenmuf = (1j * delta_a + self.ka / 2) * (1j * (delta_m + Delta_mf) + self.km / 2) + self.g_ma ** 2
@@ -218,7 +188,7 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
         a_sf = ((-1j * self.g_ma * m_sf + np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * self.omega_d))) / (
             (1j * delta_a + self.ka / 2)))
 
-        wplus_finalb = wplus_init + backward*1e6*2*np.pi
+        wplus_finalb = wplus_init + backward * 1e6 * 2 * np.pi
         Delta_mb = self.wplus_to_wm(wplus_finalb) - self.omega_m
         fenzib = -1j * self.g_ma * np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * self.omega_d))
         fenmub = (1j * delta_a + self.ka / 2) * (1j * (delta_m + Delta_mb) + self.km / 2) + self.g_ma ** 2
@@ -226,12 +196,46 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
         a_sb = ((-1j * self.g_ma * m_sb + np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * self.omega_d))) / (
             (1j * delta_a + self.ka / 2)))
 
-        wplus_finalu = wplus_init + unstable*1e6*2*np.pi
+        wplus_finalu = wplus_init + unstable * 1e6 * 2 * np.pi
         Delta_mu = self.wplus_to_wm(wplus_finalu) - self.omega_m
         fenziu = -1j * self.g_ma * np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * unstablef))
-        fenmuu = (1j * self.omega_a-unstablef + self.ka / 2) * (1j * (self.omega_m-unstablef + Delta_mu) + self.km / 2) + self.g_ma ** 2
+        fenmuu = (1j * (self.omega_a - unstablef) + self.ka / 2) * (
+                1j * (self.omega_m - unstablef + Delta_mu) + self.km / 2) + self.g_ma ** 2
         m_su = fenziu / fenmuu
-        a_su = ((-1j * self.g_ma * m_su + np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * unstablef))) / (
-            (1j * self.omega_a-unstablef + self.ka / 2)))
-
+        a_su = (-1j * self.g_ma * m_su + np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * unstablef))) / (
+                    1j * (self.omega_a - unstablef) + self.ka / 2)
         return m_sf, a_sf, m_sb, a_sb, m_su, a_su, forward, forwardf, backward, backwardf, unstable, unstablef
+
+    def Compute_ms_and_as_power(self):
+        forward, forwardp, backward, backwardp, unstable, unstablep = self.BS_power()
+        delta_a = self.omega_a - self.omega_d
+        delta_m = self.omega_m - self.omega_d
+        wplus_init = self.branch_fre(self.omega_m)
+
+        wplus_finalf = wplus_init + forward * 1e6 * 2 * np.pi
+        Delta_mf = self.wplus_to_wm(wplus_finalf) - self.omega_m
+        fenzif = -1j * self.g_ma * np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * self.omega_d))
+        fenmuf = (1j * delta_a + self.ka / 2) * (1j * (delta_m + Delta_mf) + self.km / 2) + self.g_ma ** 2
+        m_sf = fenzif / fenmuf
+        a_sf = ((-1j * self.g_ma * m_sf + np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * self.omega_d))) / (
+            (1j * delta_a + self.ka / 2)))
+
+        wplus_finalb = wplus_init + backward * 1e6 * 2 * np.pi
+        Delta_mb = self.wplus_to_wm(wplus_finalb) - self.omega_m
+        fenzib = -1j * self.g_ma * np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * self.omega_d))
+        fenmub = (1j * delta_a + self.ka / 2) * (1j * (delta_m + Delta_mb) + self.km / 2) + self.g_ma ** 2
+        m_sb = fenzib / fenmub
+        a_sb = ((-1j * self.g_ma * m_sb + np.sqrt(self.kaed) * np.sqrt(self.P_d / (hbar * self.omega_d))) / (
+            (1j * delta_a + self.ka / 2)))
+
+        wplus_finalu = wplus_init + unstable * 1e6 * 2 * np.pi
+        Delta_mu = self.wplus_to_wm(wplus_finalu) - self.omega_m
+        fenziu = -1j * self.g_ma * np.sqrt(self.kaed) * np.sqrt(unstablep / (hbar * self.omega_d))
+        fenmuu = (1j * (delta_a) + self.ka / 2) * (
+                1j * (delta_m + Delta_mu) + self.km / 2) + self.g_ma ** 2
+        m_su = fenziu / fenmuu
+        a_su = (-1j * self.g_ma * m_su + np.sqrt(self.kaed) * np.sqrt(unstablep/ (hbar * self.omega_d))) / (
+                    1j * (delta_a) + self.ka / 2)
+        return m_sf, a_sf, m_sb, a_sb, m_su, a_su, forward, forwardp, backward, backwardp, unstable, unstablep
+
+
