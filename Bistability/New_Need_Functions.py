@@ -238,4 +238,71 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
                     1j * (delta_a) + self.ka / 2)
         return m_sf, a_sf, m_sb, a_sb, m_su, a_su, forward, forwardp, backward, backwardp, unstable, unstablep
 
+    def m_a_evolution(self,m_s0,a_s0,P,fre,interval,steps):
+        omega_d=np.array(fre)*2*np.pi
+        delta_a=self.omega_a-omega_d
+        delta_m=self.omega_m-omega_d
+        S_a=-1j*delta_a-self.ka/2
+        S_m=-1j*delta_m-self.km/2
+
+        Time=[]
+        M_s=[]
+        A_s=[]
+
+        M_s.append(m_s0)
+        A_s.append(a_s0)
+        Time.append(0)
+
+        for i in range(round(steps)):
+            da=S_a*A_s[i]-1j*self.g_ma*M_s[i]+np.sqrt(self.kaed)*np.sqrt(P/(hbar*omega_d))
+            dm=S_m*M_s[i]-1j*self.g_ma*A_s[i]-1j*self.K*(2*np.abs(M_s[i])**2+1)*M_s[i]
+
+            anext=da*interval+A_s[i]
+            mnext=dm*interval+M_s[i]
+
+            A_s.append(anext)
+            M_s.append(mnext)
+            Time.append(interval*(i+1))
+        return np.array(M_s), np.array(A_s),np.array(Time)
+
+    def Parameter_definition_Ps_and_fs(self):  ##这里Pd和fd的长度必须是相同的
+        delta_a = self.omega_a - self.omega_d
+        delta_m = self.omega_m - self.omega_d
+
+        S_a = -1j * delta_a - self.ka / 2
+        S_m = -1j * delta_m - self.km / 2
+        S_am = S_m + self.g_ma ** 2 / S_a
+
+        Imag = S_am.imag
+        Real = S_am.real
+        C = 2 * self.K * self.kaed / (hbar * self.omega_d) * np.abs(self.g_ma / S_a) ** 2 + 2 * self.K * self.kmed / (
+                hbar * self.omega_d)
+
+        return Real, Imag, C
+
+    def Get_real_solution_Ps_and_fs(self, A, B, C):
+        x0 = []
+        x1 = []
+        x2 = []
+        y0 = []
+        y1 = []
+        y2 = []
+        for i, D in enumerate(self.P_d):
+            t = Solve_Cubic_Equation(A, B, C, D)
+            if sp.Abs(sp.im(t[0])) < 1:
+                omega_m0 = self.omega_m + float(sp.re(t[0]))
+                y0.append(float((self.branch_fre(omega_m0) - self.omega_start) / (1e6 * 2 * np.pi)))
+                x0.append(round(D, 9))
+
+            if sp.Abs(sp.im(t[1])) < 1:
+                omega_m1 = self.omega_m + float(sp.re(t[1]))
+                y1.append(float((self.branch_fre(omega_m1) - self.omega_start) / (1e6 * 2 * np.pi)))
+                x1.append(round(D, 9))
+
+            if sp.Abs(sp.im(t[2])) < 1:
+                omega_m2 = self.omega_m + float(sp.re(t[2]))
+                y2.append(float((self.branch_fre(omega_m2) - self.omega_start) / (1e6 * 2 * np.pi)))
+                x2.append(round(D, 9))
+        return x0, y0, x1, y1, x2, y2
+
 

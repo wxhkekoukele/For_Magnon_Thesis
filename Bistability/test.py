@@ -22,25 +22,39 @@ para = {'omega_a': 8.246e9,
 
 m_sf, a_sf, m_sb, a_sb, m_su, a_su, forward, forwardf, backward, backwardf, unstable, unstablef=Bistability_with_K(**para).Compute_ms_and_as_power()
 
+
+
+i=20
+M_s, A_s, Time=Bistability_with_K(**para).m_a_evolution(m_su[i], a_su[i],unstablef[i],8.18e9,1e-11,steps=5e5)
+M_sS=np.abs(M_s)**2
 run_time = time.time() - start_time
 print(f'Run time is {run_time}s.')
-
-
 plt.figure(figsize=(7, 6))
 axes1 = plt.subplot(111)
-# axes1.plot(f,m_sf.real, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
-# axes1.plot(f, m_sb.real, '^', linewidth=5, color='blue',label=r'backward')
-# axes1.plot(unstablef/(2*np.pi),m_su.real, '--', linewidth=5, color='purple',label=r'unstable')
-
-# axes1.plot(f,m_sf.imag, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
-# axes1.plot(f, m_sb.imag, '^', linewidth=5, color='blue',label=r'backward')
-# axes1.plot(unstablef/(2*np.pi),m_su.imag, '--', linewidth=5, color='purple',label=r'unstable')
-
-axes1.plot(m_sf.real,m_sf.imag, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
-axes1.plot(m_sb.real, m_sb.imag, '^', linewidth=5, color='blue',label=r'backward')
-axes1.plot(m_su.real,m_su.imag, '*', linewidth=5, color='purple',label=r'unstable')
+# axes1.plot(Time,M_s.real, 'o', linewidth=5,color='orange',markersize=10,label=r'real')
+# axes1.plot(Time, M_s.imag, '^', linewidth=5, color='blue',label=r'imag')
+axes1.plot(Time,M_sS, 'o', linewidth=5,color='orange',markersize=10,label=r'population')
 axes1.set_xlabel(r'$f_d$ ', fontsize=20)
 axes1.set_ylabel(r'$\Delta_m$ [MHz]', fontsize=20)
 plt.tick_params(labelsize=20)
 plt.legend(loc=0)
 plt.show()
+
+# plt.figure(figsize=(7, 6))
+# axes1 = plt.subplot(111)
+# # axes1.plot(f,m_sf.real, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
+# # axes1.plot(f, m_sb.real, '^', linewidth=5, color='blue',label=r'backward')
+# # axes1.plot(unstablef/(2*np.pi),m_su.real, '--', linewidth=5, color='purple',label=r'unstable')
+#
+# # axes1.plot(f,m_sf.imag, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
+# # axes1.plot(f, m_sb.imag, '^', linewidth=5, color='blue',label=r'backward')
+# # axes1.plot(unstablef/(2*np.pi),m_su.imag, '--', linewidth=5, color='purple',label=r'unstable')
+#
+# axes1.plot(m_sf.real,m_sf.imag, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
+# axes1.plot(m_sb.real, m_sb.imag, '^', linewidth=5, color='blue',label=r'backward')
+# axes1.plot(m_su.real,m_su.imag, '*', linewidth=5, color='purple',label=r'unstable')
+# axes1.set_xlabel(r'$f_d$ ', fontsize=20)
+# axes1.set_ylabel(r'$\Delta_m$ [MHz]', fontsize=20)
+# plt.tick_params(labelsize=20)
+# plt.legend(loc=0)
+# plt.show()
