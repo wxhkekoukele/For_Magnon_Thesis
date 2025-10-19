@@ -175,9 +175,9 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
                 x2.append(round(f/(2*np.pi), 9))
         return x0, y0, x1, y1, x2, y2
 
-    def BS_fre(self):
+    def BS_fre(self,D):
         Real, Imag, C = self.Parameter_definition_fre()
-        f0, s0, f1, s1, f2, s2 = self.Get_real_solution_fre(-Imag, -Real, C, self.P_d)
+        f0, s0, f1, s1, f2, s2 = self.Get_real_solution_fre(-Imag, -Real, C, D)
         backward = s0.copy()
         backwardf = f0.copy()
         for i in range(len(f0)):
@@ -192,7 +192,7 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
             unstable), np.array(unstablef)
 
     def Compute_ms_and_as_fre(self):
-        forward, forwardf, backward, backwardf, unstable, unstablef = self.BS_fre()
+        forward, forwardf, backward, backwardf, unstable, unstablef = self.BS_fre(self.P_d)
         m_sf, a_sf = self.Compute_ms_and_as_Delta_plus(self.P_d, forwardf, forward)
         m_sb, a_sb = self.Compute_ms_and_as_Delta_plus(self.P_d, backwardf, backward)
         m_su, a_su = self.Compute_ms_and_as_Delta_plus(self.P_d, unstablef, unstable)
@@ -202,10 +202,30 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
         F = []
         B = []
         for i, D in enumerate(self.P_d):
-            forward, forwardf, backward, backwardf, unstable, unstablef = self.BS_fre(self, D)
+            forward, forwardf, backward, backwardf, unstable, unstablef = self.BS_fre(self,D)
             F.append(forward)
             B.append(backward)
-        return self.P_d, self.omega_d, F, B
+        return F, B
+
+    def BS_2D_with_ms_and_as(self):
+        F = []
+        B = []
+        F_ms=[]
+        F_as=[]
+        B_ms=[]
+        B_as=[]
+        for i, D in enumerate(self.P_d):
+            forward, forwardf, backward, backwardf, unstable, unstablef = self.BS_fre(D)
+            fms,fas=self.Compute_ms_and_as_Delta_plus(self, D, forwardf, forward)
+            bms,bas=self.Compute_ms_and_as_Delta_plus(self, D, backwardf, backward)
+            F.append(forward)
+            B.append(backward)
+            F_ms.append(fms)
+            F_as.append(fas)
+            B_ms.append(bms)
+            B_as.append(bas)
+        return F, B,F_ms,F_as,B_ms,B_as
+
 
     def m_a_evolution(self,m_s0,a_s0,P,fre,interval,steps):
         omega_d=np.array(fre)*(2*np.pi)
@@ -275,7 +295,7 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
                 x2.append(round(D, 9))
         return x0, y0, x1, y1, x2, y2
 
-    def BS_Ps_and_fs(self):
+    def BS_Ps_and_fs(self,m_s_initial,a_s_initial):
         print(1)
         
 

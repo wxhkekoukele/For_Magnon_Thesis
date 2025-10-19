@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from New_Need_Functions import Bistability_with_K
 import time
 start_time = time.time()
-f = np.linspace(8e9, 8.4e9, 40001)
+f = np.linspace(7.8e9, 8.6e9, 40001)
 
 para = {'omega_a': 8.246e9,
         'omega_m': 8.184e9,
@@ -51,6 +51,8 @@ axes1 = plt.subplot(111)
 axes1.plot(m_sf.real,m_sf.imag, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
 axes1.plot(m_sb.real, m_sb.imag, '^', linewidth=5, color='blue',label=r'backward')
 axes1.plot(m_su.real,m_su.imag, '*', linewidth=5, color='purple',label=r'unstable')
+axes1.scatter(m_sf.real[0],m_sf.imag[0], marker='x', s=500, color='red',label=r'start',zorder=1)
+axes1.scatter(m_sf.real[-1],m_sf.imag[-1], marker='+', s=250, color='red',label=r'stop',zorder=2)
 axes1.set_xlabel(r'$f_d$ ', fontsize=20)
 axes1.set_ylabel(r'$\Delta_m$ [MHz]', fontsize=20)
 plt.tick_params(labelsize=20)
