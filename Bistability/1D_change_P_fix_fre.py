@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from New_Need_Functions import Bistability_with_K
 import time
 start_time = time.time()
-P = np.linspace(0, 100e-3, 101)
+P= np.linspace(0, 10000e-3, 1001)
 
 para = {'omega_a': 8.246e9,
         'omega_m': 8.184e9,
@@ -14,31 +14,28 @@ para = {'omega_a': 8.246e9,
         'kmint': 1.011e6,
         'kmext': 0,
         'g_ma': 32.649e6,
-        'K': 30e-9,
+        'K': 38e-9,
         'branch': 'upper',
-        'omega_d': 8.18e9,
+        'omega_d': 8.174e9,
         'P_d': P,
         }
 
-# m_sf, a_sf, m_sb, a_sb, m_su, a_su, forward, forwardf, backward, backwardf, unstable, unstablef=Bistability_with_K(**para).Compute_ms_and_as_power()
+m_sf, a_sf, m_sb, a_sb, m_su, a_su, forward, forwardf, backward, backwardf, unstable, unstablef=Bistability_with_K(**para).Compute_ms_and_as_power()
 
+stop_time = time.time()
+print(stop_time-start_time)
 
-
-# i=20
-# M_s, A_s, Time=Bistability_with_K(**para).m_a_evolution(m_su[i], a_su[i],unstablef[i],8.18e9,1e-11,steps=5e5)
-# M_sS=np.abs(M_s)**2
-# run_time = time.time() - start_time
-# print(f'Run time is {run_time}s.')
 # plt.figure(figsize=(7, 6))
 # axes1 = plt.subplot(111)
-# # axes1.plot(Time,M_s.real, 'o', linewidth=5,color='orange',markersize=10,label=r'real')
-# # axes1.plot(Time, M_s.imag, '^', linewidth=5, color='blue',label=r'imag')
-# axes1.plot(Time,M_sS, 'o', linewidth=5,color='orange',markersize=10,label=r'population')
+# axes1.plot(forwardf/(2*np.pi),forward, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
+# axes1.plot(backwardf/(2*np.pi), backward, '^', linewidth=5, color='blue',label=r'backward')
+# axes1.plot(unstablef/(2*np.pi),unstable, '*', linewidth=5, color='purple',label=r'unstable')
 # axes1.set_xlabel(r'$f_d$ ', fontsize=20)
 # axes1.set_ylabel(r'$\Delta_m$ [MHz]', fontsize=20)
 # plt.tick_params(labelsize=20)
 # plt.legend(loc=0)
 # plt.show()
+
 
 plt.figure(figsize=(7, 6))
 axes1 = plt.subplot(111)
