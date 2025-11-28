@@ -202,7 +202,7 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
         F = []
         B = []
         for i, D in enumerate(self.P_d):
-            forward, forwardf, backward, backwardf, unstable, unstablef = self.BS_fre(self,D)
+            forward, forwardf, backward, backwardf, unstable, unstablef = self.BS_fre(D)
             F.append(forward)
             B.append(backward)
         return F, B
@@ -216,8 +216,8 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
         B_as=[]
         for i, D in enumerate(self.P_d):
             forward, forwardf, backward, backwardf, unstable, unstablef = self.BS_fre(D)
-            fms,fas=self.Compute_ms_and_as_Delta_plus(self, D, forwardf, forward)
-            bms,bas=self.Compute_ms_and_as_Delta_plus(self, D, backwardf, backward)
+            fms,fas=self.Compute_ms_and_as_Delta_plus(D, forwardf, forward)
+            bms,bas=self.Compute_ms_and_as_Delta_plus(D, backwardf, backward)
             F.append(forward)
             B.append(backward)
             F_ms.append(fms)
@@ -225,7 +225,6 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
             B_ms.append(bms)
             B_as.append(bas)
         return F, B,F_ms,F_as,B_ms,B_as
-
 
     def m_a_evolution(self,m_s0,a_s0,P,fre,interval,steps):
         omega_d=np.array(fre)*(2*np.pi)
@@ -255,6 +254,12 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
         return np.array(M_s), np.array(A_s),np.array(Time)
 
     ##接下来的函数中Ps和fs的长度必须是相同的
+    def P_F_len_determination(self):
+        if len(self.omega_d)==len(self.P_d):
+            pass
+        else:
+            raise Exception("Ps and fs are not the same length!")
+
     def Parameter_definition_Ps_and_fs(self):
         delta_a = self.omega_a - self.omega_d
         delta_m = self.omega_m - self.omega_d
@@ -295,8 +300,236 @@ class Bistability_with_K():  ##统一单位全部为Hz，功率为W
                 x2.append(round(D, 9))
         return x0, y0, x1, y1, x2, y2
 
-    def BS_Ps_and_fs(self,m_s_initial,a_s_initial):
-        print(1)
-        
 
+class Bistability_with_K_try(): #all Hz with 2pi
+    def __init__(self, **kwargs):  # P_d and omega_d have the same length
+        self.omega_a = kwargs.get('omega_a', 0) *(2*np.pi)  # cavity frequency (Hz)
+        self.omega_m = kwargs.get('omega_m', 0) *(2*np.pi)  # initial magnon frequency (Hz)
+        self.kaint = kwargs.get('kaint', 0) *(2*np.pi)  # cavity internal dissipation (Hz)
+        self.kaed = kwargs.get('kaed', 0) *(2*np.pi)  # cavity drive dissipation (Hz)
+        self.kaep = kwargs.get('kaep', 0) *(2*np.pi)  # cavity probe dissipation (Hz)
+        self.kmint = kwargs.get('kmint', 0) *(2*np.pi)  # magnon internal dissipation (Hz)
+        self.kmed = kwargs.get('kmext', 0) *(2*np.pi)  # magnon drive dissipation (Hz)
+        self.P_d = np.asarray(kwargs.get('P_d'))  # drive power (W)
+        self.omega_d = np.asarray(kwargs.get('omega_d')) *(2*np.pi)  # drive frequency (Hz)
+        self.g_ma = kwargs.get('g_ma', 0) *(2*np.pi)  # coupling strength between cavity and magnon (Hz)
+        self.branch = kwargs.get('branch', 'upper')  # Magnon or upper branch or lower branch
+        self.omega_start = self.branch_fre(self.omega_m)  # the start point of simulation or experiment (Hz)
+        self.K = kwargs.get('K', 0) *(2*np.pi)  # Kerr coefficient (Hz)
 
+        self.ka = self.kaint + self.kaed + self.kaep  # cavity dissipation (Hz)
+        self.km = self.kmint + self.kmed  # magnon dissipation (Hz)
+        self.Delta_am = self.omega_a - self.omega_m  # detuning between cavity and magnon (Hz)
+        self.P_F_len_determination()
+
+    def P_F_len_determination(self):
+        if len(self.omega_d)==len(self.P_d):
+            print("Ps and fs have the same length!")
+        else:
+            raise Exception("Ps and fs have the difference length!")
+
+    def branch_fre(self, omega_m):
+        wm = omega_m * (2 * np.pi)
+        omega_UP = (self.omega_a + wm) / 2 + np.sqrt((self.omega_a - wm) ** 2 / 4 + self.g_ma ** 2)
+        omega_LP = (self.omega_a + wm) / 2 - np.sqrt((self.omega_a - wm) ** 2 / 4 + self.g_ma ** 2)
+        if self.branch == 'lower':
+            omega_out = omega_LP
+        elif self.branch == 'upper':
+            omega_out = omega_UP
+        elif (self.branch != 'lower') & (self.branch != 'upper'):
+            omega_out = omega_m
+        return np.array(omega_out) / (2 * np.pi) #(Hz) np.narray
+
+    def wplus_to_wm(self, wplus):
+        Wplus = np.array(wplus) * (2 * np.pi)
+        fenzi = Wplus ** 2 - Wplus * self.omega_a - self.g_ma ** 2
+        fenmu = Wplus - self.omega_a
+        wm = fenzi / fenmu
+        return wm / (2 * np.pi) #(Hz) np.narray
+
+    def Compute_ms_and_as_Delta_plus(self,P,fre,Delta_plus):
+        Fre=fre*(2*np.pi)
+        print(np.shape(Fre))
+        delta_a = self.omega_a - Fre
+        delta_m = self.omega_m - Fre
+
+        wplus_init = self.branch_fre(self.omega_m)
+        wplus_finalf = wplus_init + Delta_plus * (2*np.pi)
+        Delta_mf = self.wplus_to_wm(wplus_finalf) - self.omega_m
+
+        fenzif = -1j * self.g_ma * np.sqrt(self.kaed) * np.sqrt(P / (hbar * Fre))
+        fenmuf = (1j * delta_a + self.ka / 2) * (1j * (delta_m + Delta_mf) + self.km / 2) + self.g_ma ** 2
+
+        m_s = fenzif / fenmuf
+        a_s = ((-1j * self.g_ma * m_s + np.sqrt(self.kaed) * np.sqrt(P / (hbar * Fre))) / (
+            (1j * delta_a + self.ka / 2)))
+
+        return m_s,a_s # np.narray and complex
+
+    def Compara_as_and_ms_difference(self,a0,m0,a1,m1,a2,m2):
+        d1=np.abs(a1-a0)+np.abs(m1-m0)
+        d2=np.abs(a2-a0)+np.abs(m2-m0)
+        if d1>d2:
+            a_next=a2
+            m_next=m2
+        else:
+            a_next = a1
+            m_next = m1
+
+        return a_next,m_next
+
+    def Parameter_definition(self):
+        delta_a = self.omega_a - self.omega_d
+        delta_m = self.omega_m - self.omega_d
+
+        S_a = -1j * delta_a - self.ka / 2
+        S_m = -1j * delta_m - self.km / 2
+        S_am = S_m + self.g_ma ** 2 / S_a
+
+        Imag = S_am.imag
+        Real = S_am.real
+        C = 2 * self.K * self.kaed / (hbar * self.omega_d) * np.abs(self.g_ma / S_a) ** 2 + 2 * self.K * self.kmed / (
+                hbar * self.omega_d)
+
+        return Real, Imag, C ## np.narray
+
+    def Get_BS(self, A, B, C,D):#D=power  and this is bistability single point
+        index=np.where(self.P_d==D)
+        print(index)
+        t = Solve_Cubic_Equation(A, B, C, D)
+        if sp.Abs(sp.im(t[0])) < 1:
+            omega_m0 = self.omega_m + float(sp.re(t[0]))
+            y0=(float((self.branch_fre(omega_m0) - self.omega_start) / (2*np.pi)))
+            x0=(round(D, 9))
+            z0=(self.omega_d[index]/ (2*np.pi))
+            print(z0)
+        else:
+            y0 = np.nan
+            x0 = np.nan
+            z0 = np.nan
+
+        if sp.Abs(sp.im(t[1])) < 1:
+            omega_m1 = self.omega_m + float(sp.re(t[1]))
+            y1=(float((self.branch_fre(omega_m1) - self.omega_start) / (2*np.pi)))
+            x1=(round(D, 9))
+            z1=(self.omega_d[index] / (2 * np.pi))
+        else:
+            y1 = np.nan
+            x1 = np.nan
+            z1 = np.nan
+        if sp.Abs(sp.im(t[2])) < 1:
+            omega_m2 = self.omega_m + float(sp.re(t[2]))
+            y2=(float((self.branch_fre(omega_m2) - self.omega_start) / (2*np.pi)))
+            x2=(round(D, 9))
+            z2=(self.omega_d[index] / (2 * np.pi))
+        else:
+            y2 = np.nan
+            x2 = np.nan
+            z2 = np.nan
+
+        return x0, y0,z0, x1, y1,z1, x2, y2,z2 # x=power,z=fre,y=delta
+
+    def Get_BS_with_as_and_ms(self,A, B, C,D):
+        x0, y0, z0, x1, y1, z1, x2, y2, z2=self.Get_BS(A, B, C,D)
+        # print((z0))
+        # print(np.shape(z0))
+        # print(np.shape(z1))
+        # print(np.shape(z2))
+        if x0==np.nan:
+            as0=np.nan
+            ms0=np.nan
+        else:
+            as0,ms0=self.Compute_ms_and_as_Delta_plus(x0, z0, y0)
+        if x1==np.nan:
+            as1 = np.nan
+            ms1 = np.nan
+        else:
+            as1,ms1=self.Compute_ms_and_as_Delta_plus( x1, z1, y1)
+
+        if x2==np.nan:
+            as2 = np.nan
+            ms2 = np.nan
+        else:
+            as2,ms2=self.Compute_ms_and_as_Delta_plus(x2, z2, y2)
+        # print(as0)
+        # print(np.shape(as0))
+        # print(np.shape(as1))
+        # print(np.shape(as2))
+        # print(np.shape(y0))
+        # print(np.shape(y2))
+        # print(np.shape(as1))
+        # print(np.shape(as2))
+        return x0, y0, z0,as0,ms0,x1, y1, z1,as1,ms1,x2, y2, z2,as2,ms2
+
+    def BS_array_with_as_and_ms(self,start_energy='lower'): #start_energy corresponds to the initial energy, the higher or the lower
+        power=[] #power=x
+        delta=[] #delta=y
+        wd=[] #wd=z
+        a_s=[]
+        m_s=[]
+        Real, Imag, C = self.Parameter_definition()
+        for i in range(len(self.P_d)):
+            print(i)
+            x0, y0, z0,as0,ms0,x1, y1, z1,as1,ms1,x2, y2, z2,as2,ms2= self.Get_BS_with_as_and_ms(-Imag[i], Real[i], C[i],self.P_d[i])
+            # print(np.shape(as0))  # len=101
+            # print(np.shape(y0))
+            # print(np.shape(as2))
+            if i==0:
+                # print(np.shape(as0))  # len=101
+                # print(np.shape(as2))
+                if (x1==np.nan) & (x2==np.nan):
+                    power.append(x0)
+                    delta.append(y0)
+                    wd.append(z0)
+                    a_s.append(as0)
+                    m_s.append(ms0)
+                elif start_energy=='lower':
+                    if y0>y2:
+                        power.append(x2)
+                        delta.append(y2)
+                        wd.append(z2)
+                        a_s.append(as2)
+                        m_s.append(ms2)
+                    else:
+                        power.append(x0)
+                        delta.append(y0)
+                        wd.append(z0)
+                        a_s.append(as0)
+                        m_s.append(ms0)
+                elif start_energy=='higher':
+                    if y0>y2:
+                        power.append(x0)
+                        delta.append(y0)
+                        wd.append(z0)
+                        a_s.append(as0)
+                        m_s.append(ms0)
+                    else:
+                        power.append(x2)
+                        delta.append(y2)
+                        wd.append(z2)
+                        a_s.append(as2)
+                        m_s.append(ms2)
+            else:
+                # print(np.shape(as0))# len=101
+                # print(np.shape(as2))
+                a_next,m_next=self.Compara_as_and_ms_difference(a_s[i-1], m_s[i-1], as0, ms0,as2, ms2)
+                if a_next==as0:
+                    power.append(x0)
+                    delta.append(y0)
+                    wd.append(z0)
+                    a_s.append(as0)
+                    m_s.append(ms0)
+                if a_next==as2:
+                    power.append(x2)
+                    delta.append(y2)
+                    wd.append(z2)
+                    a_s.append(as2)
+                    m_s.append(ms2)
+        return power,delta,wd,a_s,m_s
+
+    def Bs_with_ms_and_as(self):
+        forward, forwardp, forwardf, backward, backwardp,backwardf, unstable, unstablep,unstablef = self.BS()
+        m_sf, a_sf = self.Compute_ms_and_as_Delta_plus(forwardp, forwardf, forward)
+        m_sb, a_sb = self.Compute_ms_and_as_Delta_plus(backwardp, backwardf, backward)
+        m_su, a_su = self.Compute_ms_and_as_Delta_plus(unstablep, unstablef, unstable)
+        return m_sf, a_sf, m_sb, a_sb, m_su, a_su, forward, forwardp, forwardf, backward, backwardp,backwardf, unstable, unstablep,unstablef
