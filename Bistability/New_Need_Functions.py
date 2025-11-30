@@ -322,6 +322,8 @@ class Bistability_with_K_evo(): #all Hz with 2pi
         self.Delta_am = self.omega_a - self.omega_m  # detuning between cavity and magnon (Hz*2pi)
         self.P_F_len_determination()
 
+        self.Real, self.Imag, self.Cc=self.Parameter_definition()
+
     def P_F_len_determination(self):
         if len(self.omega_d)==len(self.P_d):
             print("Ps and fs have the same length!")
@@ -394,10 +396,9 @@ class Bistability_with_K_evo(): #all Hz with 2pi
 
         return Real, Imag, Cc ## np.narray
 
-    def Get_BS(self, A, B, C,D):#D=power  and this is bistability single point
-        Real, Imag, Cc=self.Parameter_definition()
+    def Get_BS(self, A, B, C,D):#D=power
         index1=np.where(self.P_d==D)
-        index2 = np.where(-Imag == A)
+        index2 = np.where(-self.Imag == A)
 
         if len(index1[0])==1:
             index=index1
@@ -466,9 +467,8 @@ class Bistability_with_K_evo(): #all Hz with 2pi
         wd=[] #wd=z
         a_s=[]
         m_s=[]
-        Real, Imag, Cc = self.Parameter_definition()
         for i in range(len(self.P_d)):
-            x0, y0, z0,as0,ms0,x1, y1, z1,as1,ms1,x2, y2, z2,as2,ms2= self.Get_BS_with_as_and_ms(-Imag[i], Real[i], Cc[i],self.P_d[i])
+            x0, y0, z0,as0,ms0,x1, y1, z1,as1,ms1,x2, y2, z2,as2,ms2= self.Get_BS_with_as_and_ms(-self.Imag[i], self.Real[i], self.Cc[i],self.P_d[i])
 
             if i==0:
                 if (np.isnan(x1))&(np.isnan(x2)):
@@ -525,11 +525,10 @@ class Bistability_with_K_evo(): #all Hz with 2pi
         wd = []  # wd=z
         a_s = []
         m_s = []
-        Real, Imag, Cc = self.Parameter_definition()
         for i in range(len(self.P_d)):
-            x0, y0, z0, as0, ms0, x1, y1, z1, as1, ms1, x2, y2, z2, as2, ms2 = self.Get_BS_with_as_and_ms(-Imag[i],
-                                                                                                          Real[i],
-                                                                                                          Cc[i],
+            x0, y0, z0, as0, ms0, x1, y1, z1, as1, ms1, x2, y2, z2, as2, ms2 = self.Get_BS_with_as_and_ms(-self.Imag[i],
+                                                                                                          self.Real[i],
+                                                                                                          self.Cc[i],
                                                                                                           self.P_d[i])
             if (np.isnan(x1))==False:
                 power.append(x1)
@@ -539,6 +538,82 @@ class Bistability_with_K_evo(): #all Hz with 2pi
                 m_s.append(ms1)
 
         return power, delta, wd, a_s, m_s
+
+    def Parameter_definition_single(self,wd):
+        omega_D=wd*2*np.pi
+        delta_a = self.omega_a - omega_D
+        delta_m = self.omega_m - omega_D
+
+        S_a = -1j * delta_a - self.ka / 2
+        S_m = -1j * delta_m - self.km / 2
+        S_am = S_m + self.g_ma ** 2 / S_a
+
+        Imag = S_am.imag
+        Real = S_am.real
+        Cc = 2 * self.K * self.kaed / (hbar * omega_D) * np.abs(self.g_ma / S_a) ** 2 + 2 * self.K * self.kmed / (
+                hbar * omega_D)
+
+        return Real, Imag, Cc  ## np.narray
+
+    def Get_Bs_single(self,wd,P):
+        Real, Imag, Cc=self.Parameter_definition_single(wd)
+        t = Solve_Cubic_Equation(-Imag, Real, Cc, P)
+        if sp.Abs(sp.im(t[0])) < 1:
+            omega_m0 = self.omega_m + float(sp.re(t[0]))
+            y0 = (float((self.branch_fre(omega_m0) - self.omega_start) / (2 * np.pi)))
+            x0 = (round(P, 9))
+            z0 = (wd)
+
+        else:
+            y0 = np.nan
+            x0 = np.nan
+            z0 = np.nan
+        if sp.Abs(sp.im(t[1])) < 1:
+            omega_m1 = self.omega_m + float(sp.re(t[1]))
+            y1 = (float((self.branch_fre(omega_m1) - self.omega_start) / (2 * np.pi)))
+            x1 = (round(P, 9))
+            z1 = (wd)
+        else:
+            y1 = np.nan
+            x1 = np.nan
+            z1 = np.nan
+        if sp.Abs(sp.im(t[2])) < 1:
+            omega_m2 = self.omega_m + float(sp.re(t[2]))
+            y2 = (float((self.branch_fre(omega_m2) - self.omega_start) / (2 * np.pi)))
+            x2 = (round(P, 9))
+            z2 = (wd)
+
+        else:
+            y2 = np.nan
+            x2 = np.nan
+            z2 = np.nan
+
+        return x0, y0, z0, x1, y1, z1, x2, y2, z2  # x=power,z=fre,y=delta
+
+    def Get_BS_with_as_and_ms_single(self, wd,P):
+        x0, y0, z0, x1, y1, z1, x2, y2, z2 = self.Get_Bs_single(wd,P)
+        if x0 == np.nan:
+            as0 = np.nan
+            ms0 = np.nan
+        else:
+            as0, ms0 = self.Compute_ms_and_as_Delta_plus(x0, z0, y0)
+        if x1 == np.nan:
+            as1 = np.nan
+            ms1 = np.nan
+        else:
+            as1, ms1 = self.Compute_ms_and_as_Delta_plus(x1, z1, y1)
+
+        if x2 == np.nan:
+            as2 = np.nan
+            ms2 = np.nan
+        else:
+            as2, ms2 = self.Compute_ms_and_as_Delta_plus(x2, z2, y2)
+
+        return x0, y0, z0, as0, ms0, x1, y1, z1, as1, ms1, x2, y2, z2, as2, ms2
+
+    def Unstable_array_with_as_and_ms_single(self,wd,P):
+        x0, y0, z0, as0, ms0, x1, y1, z1, as1, ms1, x2, y2, z2, as2, ms2 = self.Get_BS_with_as_and_ms_single(wd,P)
+        return x1, y1, z1, as1, ms1
 
     def m_a_evolution(self,Pi,fi,Pf,ff,interval,steps,start_energy='lower'):
         Fi=fi*2*np.pi
@@ -551,19 +626,6 @@ class Bistability_with_K_evo(): #all Hz with 2pi
         m_s = []
         Time=[]
 
-        delta_ai = self.omega_a - Fi
-        delta_mi = self.omega_m - Fi
-
-        S_ai = -1j * delta_ai - self.ka / 2
-        S_mi = -1j * delta_mi - self.km / 2
-        S_ami = S_mi + self.g_ma ** 2 / S_ai
-
-        Imagi = S_ami.imag
-        Reali= S_ami.real
-        Cci = 2 * self.K * self.kaed / (hbar * Fi) * np.abs(self.g_ma / S_ai) ** 2 + 2 * self.K * self.kmed / (
-                hbar * Fi)
-
-
         delta_a = self.omega_a - Ff
         delta_m = self.omega_m - Ff
         S_a = -1j * delta_a - self.ka / 2
@@ -572,47 +634,44 @@ class Bistability_with_K_evo(): #all Hz with 2pi
             # print(i)
             Time.append(interval*i)
             if i==0:
-                x0, y0, z0, as0, ms0, x1, y1, z1, as1, ms1, x2, y2, z2, as2, ms2 = self.Get_BS_with_as_and_ms(-Imagi,
-                                                                                                              Reali,
-                                                                                                              Cci,
-                                                                                                              Pi)
+                x0, y0, z0, as0, ms0, x1, y1, z1, as1, ms1, x2, y2, z2, as2, ms2 = self.Get_BS_with_as_and_ms_single(fi,Pi)
                 if (np.isnan(x1))&(np.isnan(x2)):
                     print('1if')
                     power.append(x0)
                     delta.append(y0)
                     wd.append(z0)
-                    a_s.append(as0[0])
-                    m_s.append(ms0[0])
+                    a_s.append(as0)
+                    m_s.append(ms0)
                 elif start_energy=='lower':
                     if y0>y2:
                         print('2if')
                         power.append(x2)
                         delta.append(y2)
                         wd.append(z2)
-                        a_s.append(as2[0])
-                        m_s.append(ms2[0])
+                        a_s.append(as2)
+                        m_s.append(ms2)
                     else:
                         print('3if')
                         power.append(x0)
                         delta.append(y0)
                         wd.append(z0)
-                        a_s.append(as0[0])
-                        m_s.append(ms0[0])
+                        a_s.append(as0)
+                        m_s.append(ms0)
                 elif start_energy=='higher':
                     if y0>y2:
                         print('4if')
                         power.append(x0)
                         delta.append(y0)
                         wd.append(z0)
-                        a_s.append(as0[0])
-                        m_s.append(ms0[0])
+                        a_s.append(as0)
+                        m_s.append(ms0)
                     else:
                         print('5if')
                         power.append(x2)
                         delta.append(y2)
                         wd.append(z2)
-                        a_s.append(as2[0])
-                        m_s.append(ms2[0])
+                        a_s.append(as2)
+                        m_s.append(ms2)
         # initial state is chosen
 
             else:

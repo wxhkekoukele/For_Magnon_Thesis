@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from New_Need_Functions import Bistability_with_K,Bistability_with_K_evo
 f1=np.linspace(8.205,8.208,301)*1e9
 P1=np.linspace(0,300e-3,301)
-
 para = {'omega_a': 8.246e9,
         'omega_m': 8.184e9,
         'kaint': 3.39e6,
@@ -18,8 +17,8 @@ para = {'omega_a': 8.246e9,
         'omega_d': f1,
         'P_d': P1,
         }
-a_s,m_s,delta, Time,power,wd=Bistability_with_K_evo(**para).m_a_evolution(100e-3,8.20669e9,100e-3,8.20670e9,1e-12,1e6,start_energy='higher')
-
+a_s,m_s,delta, Time,power,wd=Bistability_with_K_evo(**para).m_a_evolution(8e-3,8.175e9,7e-3,8.175e9,1e-11,1e6,start_energy='lower')
+print(min(delta))
 # print(delta)
 plt.figure(figsize=(12, 6))
 axes1 = plt.subplot(111)

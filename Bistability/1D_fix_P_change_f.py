@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 from New_Need_Functions import Bistability_with_K,Bistability_with_K_evo
 import time
 start_time = time.time()
-f1=np.linspace(8.205,8.208,301)*1e9
+f1=np.linspace(8.1,8.3,101)*1e9
 P1=np.ones(len(f1))*100e-3
 
-f2=np.linspace(8.205,8.208,301)*1e9
+f2=np.linspace(8.1,8.3,101)*1e9
 P2=np.ones(len(f2))*100e-3
 para = {'omega_a': 8.246e9,
         'omega_m': 8.184e9,
@@ -54,18 +54,18 @@ m_sf, a_sf, m_sb, a_sb, m_su, a_su, forward, forwardp, backward, backwardp, unst
 power,delta,wd,a_s,m_s=Bistability_with_K_evo(**para).BS_array_with_as_and_ms(start_energy='higher')
 power1,delta1,wd1,a_s1,m_s1=Bistability_with_K_evo(**para1).BS_array_with_as_and_ms(start_energy='lower')
 
-# plt.figure(figsize=(12, 6))
-# axes1 = plt.subplot(121)
-# # axes1.plot(power,delta, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
-# # axes1.plot(power1, delta1, '^', linewidth=5, color='blue',label=r'backward')
-# axes1.plot(wd,np.array(delta)/1e6, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
-# axes1.plot(wd1, np.array(delta1)/1e6, '^', linewidth=5, color='blue',label=r'backward')
-# axes1 = plt.subplot(122)
-# axes1.plot(dfp,df/1e6, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
-# axes1.plot(dbp, db/1e6, '^', linewidth=5, color='blue',label=r'backward')
-#
-# plt.legend(loc=0)
-# plt.show()
+plt.figure(figsize=(12, 6))
+axes1 = plt.subplot(121)
+# axes1.plot(power,delta, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
+# axes1.plot(power1, delta1, '^', linewidth=5, color='blue',label=r'backward')
+axes1.plot(wd,np.array(delta)/1e6, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
+axes1.plot(wd1, np.array(delta1)/1e6, '^', linewidth=5, color='blue',label=r'backward')
+axes1 = plt.subplot(122)
+axes1.plot(dfp,df/1e6, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
+axes1.plot(dbp, db/1e6, '^', linewidth=5, color='blue',label=r'backward')
+
+plt.legend(loc=0)
+plt.show()
 
 # plt.figure(figsize=(12, 6))
 # axes1 = plt.subplot(121)
