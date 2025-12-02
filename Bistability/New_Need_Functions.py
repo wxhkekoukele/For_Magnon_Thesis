@@ -615,7 +615,7 @@ class Bistability_with_K_evo(): #all Hz with 2pi
         x0, y0, z0, as0, ms0, x1, y1, z1, as1, ms1, x2, y2, z2, as2, ms2 = self.Get_BS_with_as_and_ms_single(wd,P)
         return x1, y1, z1, as1, ms1
 
-    def m_a_evolution(self,Pi,fi,Pf,ff,interval,steps,start_energy='lower'):
+    def m_a_evolution(self,Pi,fi,Pf,ff,interval,steps,start_energy='lower',a_si=None,m_si=None,deltai=None,poweri=None,wdi=None):
         Fi=fi*2*np.pi
         Ff=ff*2*np.pi
 
@@ -624,7 +624,7 @@ class Bistability_with_K_evo(): #all Hz with 2pi
         wd = []  # wd=z
         a_s = []
         m_s = []
-        Time=[]
+        time=[]
 
         delta_a = self.omega_a - Ff
         delta_m = self.omega_m - Ff
@@ -632,46 +632,53 @@ class Bistability_with_K_evo(): #all Hz with 2pi
         S_m = -1j * delta_m - self.km / 2
         for i in range(round(steps)):
             # print(i)
-            Time.append(interval*i)
+            time.append(interval*i)
             if i==0:
-                x0, y0, z0, as0, ms0, x1, y1, z1, as1, ms1, x2, y2, z2, as2, ms2 = self.Get_BS_with_as_and_ms_single(fi,Pi)
-                if (np.isnan(x1))&(np.isnan(x2)):
-                    print('1if')
-                    power.append(x0)
-                    delta.append(y0)
-                    wd.append(z0)
-                    a_s.append(as0)
-                    m_s.append(ms0)
-                elif start_energy=='lower':
-                    if y0>y2:
-                        print('2if')
-                        power.append(x2)
-                        delta.append(y2)
-                        wd.append(z2)
-                        a_s.append(as2)
-                        m_s.append(ms2)
-                    else:
-                        print('3if')
+                if a_si!=None:
+                    power.append(poweri)  # power=x
+                    delta.append(deltai)  # delta=y
+                    wd.append(wdi)  # wd=z
+                    a_s.append(a_si)
+                    m_s.append(m_si)
+                else:
+                    x0, y0, z0, as0, ms0, x1, y1, z1, as1, ms1, x2, y2, z2, as2, ms2 = self.Get_BS_with_as_and_ms_single(fi,Pi)
+                    if (np.isnan(x1))&(np.isnan(x2)):
+                        print('1if')
                         power.append(x0)
                         delta.append(y0)
                         wd.append(z0)
                         a_s.append(as0)
                         m_s.append(ms0)
-                elif start_energy=='higher':
-                    if y0>y2:
-                        print('4if')
-                        power.append(x0)
-                        delta.append(y0)
-                        wd.append(z0)
-                        a_s.append(as0)
-                        m_s.append(ms0)
-                    else:
-                        print('5if')
-                        power.append(x2)
-                        delta.append(y2)
-                        wd.append(z2)
-                        a_s.append(as2)
-                        m_s.append(ms2)
+                    elif start_energy=='lower':
+                        if y0>y2:
+                            print('2if')
+                            power.append(x2)
+                            delta.append(y2)
+                            wd.append(z2)
+                            a_s.append(as2)
+                            m_s.append(ms2)
+                        else:
+                            print('3if')
+                            power.append(x0)
+                            delta.append(y0)
+                            wd.append(z0)
+                            a_s.append(as0)
+                            m_s.append(ms0)
+                    elif start_energy=='higher':
+                        if y0>y2:
+                            print('4if')
+                            power.append(x0)
+                            delta.append(y0)
+                            wd.append(z0)
+                            a_s.append(as0)
+                            m_s.append(ms0)
+                        else:
+                            print('5if')
+                            power.append(x2)
+                            delta.append(y2)
+                            wd.append(z2)
+                            a_s.append(as2)
+                            m_s.append(ms2)
         # initial state is chosen
 
             else:
@@ -685,34 +692,38 @@ class Bistability_with_K_evo(): #all Hz with 2pi
 
                 delta_next=self.branch_fre(self.omega_m+2*self.K*np.abs(m_s[i])**2)-self.omega_start
                 delta.append(delta_next/(2*np.pi))
-        return np.array(a_s),np.array(m_s),np.array(delta), np.array(Time),np.array(power),np.array(wd)
+        return np.array(a_s),np.array(m_s),np.array(delta), np.array(time),np.array(power),np.array(wd)
 
-        # y0 = (float((self.branch_fre(omega_m0) - self.omega_start) / (2 * np.pi)))
+    def m_a_evolution_array(self,P_array,f_array,interval,steps,sample_rate:int,start_energy='lower'):
 
 
-        # omega_d=np.array(fre)*(2*np.pi)
-        # delta_a=self.omega_a-omega_d
-        # delta_m=self.omega_m-omega_d
-        # S_a=-1j*delta_a-self.ka/2
-        # S_m=-1j*delta_m-self.km/2
-        #
-        # Time=[]
-        # M_s=[]
-        # A_s=[]
-        #
-        # M_s.append(m_s0)
-        # A_s.append(a_s0)
-        # Time.append(0)
-        #
-        # for i in range(round(steps)):
-        #     da=S_a*A_s[i]-1j*self.g_ma*M_s[i]+np.sqrt(self.kaed)*np.sqrt(P/(hbar*omega_d))
-        #     dm=S_m*M_s[i]-1j*self.g_ma*A_s[i]-1j*self.K*(2*np.abs(M_s[i])**2+1)*M_s[i]
-        #
-        #     anext=da*interval+A_s[i]
-        #     mnext=dm*interval+M_s[i]
-        #
-        #     A_s.append(anext)
-        #     M_s.append(mnext)
-        #     Time.append(interval*(i+1))
-        # return np.array(M_s), np.array(A_s),np.array(Time)
+        if len(P_array)==len(f_array):
+            print("P_array and f_array have the same length!")
+        else:
+            raise Exception("P_array and f_array have the difference length!")
+
+        Power = []  # power=x
+        Delta = []  # delta=y
+        Wd = []  # wd=z
+        A_s = []
+        M_s = []
+        Time = []
+        for i in range(len(P_array)-1):
+            print(i)
+            if len(A_s)==0:
+                a_s, m_s, delta, time, power, wd = self.m_a_evolution(P_array[i], f_array[i], P_array[i + 1],
+                                                                      f_array[i + 1], interval, steps, start_energy)
+
+            else:
+                a_s,m_s,delta,time,power,wd=self.m_a_evolution(P_array[i],f_array[i],P_array[i+1],f_array[i+1],interval,steps,start_energy,
+                                                           a_si=A_s[-1],m_si=M_s[-1],deltai=Delta[-1],poweri=Power[-1],wdi=Wd[-1])
+
+            Power = Power+power.tolist()[::round(sample_rate)]# power=x
+            Delta = Delta+delta.tolist()[::round(sample_rate)]# delta=y
+            Wd = Wd+wd.tolist()[::round(sample_rate)]  # wd=z
+            A_s = A_s+a_s.tolist()[::round(sample_rate)]
+            M_s = M_s+m_s.tolist()[::round(sample_rate)]
+            Time = Time+(time+interval*i*steps+1).tolist()[::round(sample_rate)]
+
+        return np.array(A_s), np.array(M_s), np.array(Delta), np.array(Time), np.array(Power), np.array(Wd)
 

@@ -1,5 +1,3 @@
-import sympy as sp
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 from New_Need_Functions import Bistability_with_K,Bistability_with_K_evo
@@ -14,19 +12,21 @@ para = {'omega_a': 8.246e9,
         'kmint': 1.011e6,
         'kmext': 0,
         'g_ma': 32.649e6,
-        'K': 30e-9,
+        'K': 38e-9,
         'branch': 'upper',
         'omega_d': f1,
         'P_d': P1,
         }
 i=50
-a_s,m_s,delta, Time,power,wd=Bistability_with_K_evo(**para).m_a_evolution(drive_power[i],drive_fre[i],drive_power[i+1],drive_fre[i+1],1e-11,2e5,start_energy='lower')
+a_s,m_s,delta, Time,power,wd=Bistability_with_K_evo(**para).m_a_evolution_array(drive_power[::-1],drive_fre[::-1],1e-11,2e5,1e3,start_energy='higher')
 print(min(delta))
 # print(delta)
-print(len(Time[::1000]))
+print(len(Time))
 plt.figure(figsize=(12, 6))
 axes1 = plt.subplot(111)
-axes1.plot(Time[::1000],delta[::1000], '-', linewidth=5,color='orange',markersize=10,label=r'forward')
+# axes1.plot(Time[::1000],delta[::1000], '-', linewidth=5,color='orange',markersize=10,label=r'forward')
+axes1.plot(Time,delta, '-', linewidth=5,color='orange',markersize=10,label=r'forward')
+
 # axes1.plot(wd,delta, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
 # axes1.plot(Time,np.abs(m_s)**2, 'o', linewidth=5,color='orange',markersize=10,label=r'forward')
 # axes1.plot(wd1, delta1, '^', linewidth=5, color='blue',label=r'backward')
