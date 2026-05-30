@@ -20,7 +20,7 @@ para = {'omega_a': 8.246e9,
         'P_d': P1,
         }
 i=50
-a_s,m_s,delta, Time,power,wd=Bistability_with_K_evo(**para).m_a_evolution(drive_power[i],drive_fre[i],drive_power[i+1],drive_fre[i+1],1e-11,2e5,start_energy='lower')
+a_s,m_s,delta,Time,power,wd=Bistability_with_K_evo(**para).m_a_evolution(drive_power[i],drive_fre[i],drive_power[i+1],drive_fre[i+1],1e-11,2e5,start_energy='lower')
 print(min(delta))
 # print(delta)
 print(len(Time[::1000]))

@@ -5,6 +5,7 @@ f1=np.linspace(8.205,8.208,301)*1e9
 P1=np.linspace(0,300e-3,301)
 drive_fre=np.loadtxt(r'/Users/xiaohanwang/Desktop/cp_try/drive fre.txt')*1e9
 drive_power=np.loadtxt(r'/Users/xiaohanwang/Desktop/cp_try/drive power.txt')
+print(drive_power)
 para = {'omega_a': 8.246e9,
         'omega_m': 8.184e9,
         'kaint': 3.39e6,

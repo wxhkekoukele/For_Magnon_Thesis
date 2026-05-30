@@ -696,7 +696,6 @@ class Bistability_with_K_evo(): #all Hz with 2pi
 
     def m_a_evolution_array(self,P_array,f_array,interval,steps,sample_rate:int,start_energy='lower'):
 
-
         if len(P_array)==len(f_array):
             print("P_array and f_array have the same length!")
         else:
@@ -709,15 +708,16 @@ class Bistability_with_K_evo(): #all Hz with 2pi
         M_s = []
         Time = []
         for i in range(len(P_array)-1):
-            print(i)
+            # print(i)
             if len(A_s)==0:
                 a_s, m_s, delta, time, power, wd = self.m_a_evolution(P_array[i], f_array[i], P_array[i + 1],
                                                                       f_array[i + 1], interval, steps, start_energy)
+                print(power)
 
             else:
                 a_s,m_s,delta,time,power,wd=self.m_a_evolution(P_array[i],f_array[i],P_array[i+1],f_array[i+1],interval,steps,start_energy,
                                                            a_si=A_s[-1],m_si=M_s[-1],deltai=Delta[-1],poweri=Power[-1],wdi=Wd[-1])
-
+                print(power)
             Power = Power+power.tolist()[::round(sample_rate)]# power=x
             Delta = Delta+delta.tolist()[::round(sample_rate)]# delta=y
             Wd = Wd+wd.tolist()[::round(sample_rate)]  # wd=z
@@ -725,5 +725,7 @@ class Bistability_with_K_evo(): #all Hz with 2pi
             M_s = M_s+m_s.tolist()[::round(sample_rate)]
             Time = Time+(time+interval*i*steps+1).tolist()[::round(sample_rate)]
 
+        print(len(np.array(Power)))
+        print(len(np.array(Delta)))
         return np.array(A_s), np.array(M_s), np.array(Delta), np.array(Time), np.array(Power), np.array(Wd)
 
